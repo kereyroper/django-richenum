@@ -1,5 +1,6 @@
-import forms  # noqa
-import models  # noqa
+from __future__ import absolute_import
+from . import forms  # noqa
+from . import models  # noqa
 
 
 __all__ = (

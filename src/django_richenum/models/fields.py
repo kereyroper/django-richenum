@@ -1,16 +1,17 @@
+from __future__ import absolute_import
 import numbers
 
 from django.db import models
 
 from richenum import RichEnumValue, OrderedRichEnumValue
+import six
 
 
-class IndexEnumField(models.IntegerField):
+class IndexEnumField(six.with_metaclass(models.SubfieldBase, models.IntegerField)):
     '''Store ints in DB, but expose OrderedRichEnumValues in Python.
 
     '''
     description = 'Efficient storage for OrderedRichEnums'
-    __metaclass__ = models.SubfieldBase
 
     def __init__(self, enum, *args, **kwargs):
         if not hasattr(enum, 'from_index'):
@@ -75,22 +76,21 @@ class LaxIndexEnumField(IndexEnumField):
     Mainly used to help migrate existing code that uses strings as database values.
     '''
     def get_prep_value(self, value):
-        if isinstance(value, basestring):
+        if isinstance(value, six.string_types):
             return self.enum.from_canonical(value).index
         return super(LaxIndexEnumField, self).get_prep_value(value)
 
     def to_python(self, value):
-        if isinstance(value, basestring):
+        if isinstance(value, six.string_types):
             return self.enum.from_canonical(value)
         return super(LaxIndexEnumField, self).to_python(value)
 
 
-class CanonicalNameEnumField(models.CharField):
+class CanonicalNameEnumField(six.with_metaclass(models.SubfieldBase, models.CharField)):
     '''Store varchar in DB, but expose RichEnumValues in Python.
 
     '''
     description = 'Storage for RichEnums'
-    __metaclass__ = models.SubfieldBase
 
     def __init__(self, enum, *args, **kwargs):
         if not hasattr(enum, 'from_canonical'):
@@ -117,7 +117,7 @@ class CanonicalNameEnumField(models.CharField):
             return None
         elif isinstance(value, RichEnumValue):
             return value.canonical_name
-        elif isinstance(value, basestring):
+        elif isinstance(value, six.string_types):
             return value
         else:
             raise TypeError('Cannot convert value: %s (%s) to a string.' % (value, type(value)))
@@ -129,7 +129,7 @@ class CanonicalNameEnumField(models.CharField):
             return None
         elif isinstance(value, RichEnumValue):
             return value
-        elif isinstance(value, basestring):
+        elif isinstance(value, six.string_types):
             return self.enum.from_canonical(value)
         else:
             raise TypeError('Cannot interpret %s (%s) as an RichEnumValue.' % (value, type(value)))
